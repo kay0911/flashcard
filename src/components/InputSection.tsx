@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { ArrowRight, Loader2, Sparkles, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowRight, Loader2, Sparkles, Pencil, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useFlashcardStore } from '../store/useFlashcardStore';
 
 export const InputSection = () => {
   const { text, setText, generateFlashcards, setManualCards, step } = useFlashcardStore();
   const isProcessing = step === 'processing';
   const [activeTab, setActiveTab] = useState<'ai' | 'manual'>('ai');
+  const [error, setError] = useState<string | null>(null);
   
   const [manualCards, setManualCardsLocal] = useState([{ front: '', back: '' }, { front: '', back: '' }]);
 
@@ -19,6 +20,7 @@ export const InputSection = () => {
   };
 
   const handleManualChange = (index: number, field: 'front'|'back', value: string) => {
+    setError(null); // Tắt lỗi khi user bắt đầu gõ lại
     setManualCardsLocal(prev => {
       const newArr = [...prev];
       newArr[index] = { ...newArr[index], [field]: value };
@@ -29,9 +31,10 @@ export const InputSection = () => {
   const submitManual = () => {
     const isValid = manualCards.every(c => c.front.trim() && c.back.trim());
     if (!isValid) {
-      alert("Vui lòng điền đủ mặt trước và mặt sau cho tất cả các thẻ!");
+      setError("Vui lòng điền đủ Mặt trước và Mặt sau cho tất cả các thẻ!");
       return;
     }
+    setError(null);
     setManualCards(manualCards);
   };
 
@@ -43,13 +46,19 @@ export const InputSection = () => {
       
       <div className="flex bg-zinc-100 dark:bg-zinc-800/80 p-1 justify-center rounded-xl mb-6 mt-2 relative overflow-hidden ring-1 ring-zinc-200 dark:ring-zinc-700/50">
          <button 
-           onClick={() => setActiveTab('ai')}
+           onClick={() => {
+             setActiveTab('ai');
+             setError(null);
+           }}
            className={`flex items-center gap-2 py-3 px-6 rounded-lg text-sm font-semibold transition-all ${activeTab === 'ai' ? 'bg-white dark:bg-zinc-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
          >
            <Sparkles className="w-4 h-4" /> AI Tạo Tự Động
          </button>
          <button 
-           onClick={() => setActiveTab('manual')}
+           onClick={() => {
+             setActiveTab('manual');
+             setError(null);
+           }}
            className={`flex items-center gap-2 py-3 px-6 rounded-lg text-sm font-semibold transition-all ${activeTab === 'manual' ? 'bg-white dark:bg-zinc-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
          >
            <Pencil className="w-4 h-4" /> Nhập Thủ Công
@@ -96,6 +105,13 @@ export const InputSection = () => {
           <p className="text-zinc-500 dark:text-zinc-400 mb-6 max-w-md mx-auto">
             Nhập chính xác Mặt trước và Mặt sau cho từng thẻ nhớ để cá nhân hóa hoàn toàn bộ từ vựng của bạn.
           </p>
+
+          {error && (
+            <div className="mb-6 flex items-center justify-center gap-2 p-4 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 rounded-xl border border-red-200 dark:border-red-800/50 animate-in fade-in slide-in-from-top-2">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <p className="font-medium text-sm">{error}</p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-4 w-full">
             {manualCards.map((card, i) => (
