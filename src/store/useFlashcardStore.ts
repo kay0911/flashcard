@@ -31,8 +31,15 @@ const extractVocabularyWithGemini = async (text: string): Promise<Card[]> => {
   // Sử dụng model Gemini 3.1 Flash Lite Preview theo yêu cầu
   const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
 
+  const wordCount = text.trim().split(/\s+/).length;
+  let targetCardsCount = 5;
+  if (wordCount > 500) targetCardsCount = 20;
+  else if (wordCount > 200) targetCardsCount = 15;
+  else if (wordCount > 50) targetCardsCount = 10;
+
   const prompt = `
-Bạn là một chuyên gia ngôn ngữ. Hãy đọc đoạn văn bản dưới đây, trích xuất ra những từ vựng quan trọng nhất (khoảng 5-10 từ) và dịch nghĩa chúng sang tiếng Việt cho người học. 
+Bạn là một chuyên gia ngôn ngữ. Hãy đọc đoạn văn bản dưới đây, tự động tính toán độ dài và trích xuất ra tối đa ${targetCardsCount} từ vựng/cụm từ quan trọng nhất, sau đó dịch nghĩa chúng sang tiếng Việt cho người học. 
+Nếu văn bản ngắn, hãy lấy ít hơn. Nếu có nhiều từ khó, hãy lấy sát với mức tối đa ${targetCardsCount} từ.
 Kết quả trả về PHẢI là một mảng JSON thuần túy (không có bọc block markdowns hay dòng text nào khác ngoài mảng).
 Định dạng JSON yêu cầu:
 [
